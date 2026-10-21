@@ -1,0 +1,49 @@
+{
+  "name": "juum-standalone",
+  "productName": "JUUM",
+  "version": "1.0.0",
+  "description": "JUUM offline standalone strumplate synthesizer",
+  "author": "MENTLONE",
+  "license": "MIT",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win nsis portable",
+    "dist:dir": "electron-builder --dir"
+  },
+  "devDependencies": {
+    "electron": "^37.2.6",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "com.mentlone.juum",
+    "productName": "JUUM",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "index.html",
+      "manual.html",
+      "electron/**/*",
+      "package.json"
+    ],
+    "asar": true,
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "artifactName": "JUUM-${version}-${arch}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "JUUM"
+    },
+    "portable": {
+      "artifactName": "JUUM-${version}-portable-${arch}.${ext}"
+    }
+  }
+}
