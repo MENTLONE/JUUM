@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>JUUM — Strumplate Synthesizer</title>
+<style>
+:root{--bg:#03080d;--panel:#07141d;--panel2:#041018;--line:#0b5f87;--cyan:#26dfff;--blue:#168dff;--glow:0 0 7px #16bfff,0 0 20px #007aff55;--text:#b9f6ff;--muted:#5ba8bd}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% 0,#09243a 0,#03080d 48%,#010407 100%);color:var(--text);font:13px/1.35 "Arial Narrow",Arial,sans-serif;letter-spacing:.05em}
+button,input,select{font:inherit}button{color:var(--text);background:linear-gradient(#092331,#031019);border:1px solid #167eaa;border-radius:5px;cursor:pointer;transition:.12s}button:hover,button.active{color:#fff;border-color:var(--cyan);box-shadow:var(--glow);text-shadow:0 0 8px var(--cyan)}button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.shell{max-width:1600px;margin:auto;padding:14px;display:grid;gap:12px}.top{display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:12px}.middle{display:grid;grid-template-columns:2fr 1.05fr .8fr .65fr;gap:12px}.panel{background:linear-gradient(145deg,#081924eF,#02090f 70%);border:1px solid #0d5b7b;border-radius:10px;box-shadow:inset 0 0 18px #0878a51c,0 5px 20px #0009;padding:14px;min-width:0;position:relative}.panel:before{content:"";position:absolute;inset:3px;border:1px solid #0b2d40;border-radius:7px;pointer-events:none}.brand{display:flex;flex-direction:column;justify-content:center;padding:18px 22px}.logo{font-size:clamp(42px,6vw,76px);font-weight:900;letter-spacing:.16em;color:#d7fbff;text-shadow:0 0 5px #fff,0 0 18px #16cfff,0 0 38px #007bff;line-height:1}.subtitle{color:var(--cyan);font-size:16px;letter-spacing:.18em;margin-top:12px}.micro{color:var(--muted);font-size:10px;letter-spacing:.12em;margin-top:6px}.section-title{margin:0 0 12px;color:var(--cyan);font-size:15px;font-weight:800;letter-spacing:.13em;text-transform:uppercase}.section-title:before{content:"";display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--cyan);box-shadow:var(--glow);margin-right:9px}.voice-name{width:100%;padding:8px;background:#02090e;color:var(--text);border:1px solid #12658b;border-radius:5px;margin-bottom:10px}.knobs{display:flex;justify-content:space-between;gap:7px;flex-wrap:wrap}.knob-wrap{flex:1;min-width:49px;text-align:center}.knob{--angle:0deg;width:44px;height:44px;border-radius:50%;position:relative;margin:3px auto 6px;background:radial-gradient(circle at 35% 28%,#14384b,#02070b 68%);border:1px solid #1689ba;box-shadow:inset 0 0 8px #0b83bb88,0 0 10px #00bfff18;cursor:ns-resize;touch-action:none}.knob:before{content:"";position:absolute;inset:5px;border-radius:50%;border:1px solid #0d5e7e}.knob:after{content:"";position:absolute;width:2px;height:12px;background:#d7fbff;box-shadow:0 0 7px var(--cyan);top:4px;left:calc(50% - 1px);transform-origin:50% 18px;transform:rotate(var(--angle))}.knob-label{font-size:9px;color:#8deaff;text-transform:uppercase;white-space:nowrap}.knob-value{font-size:9px;color:#3daacb;margin-top:2px}.chords{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:7px}.chord{min-height:57px;padding:6px 2px;font-size:11px}.chord small{display:block;color:#54bddd;font-size:9px;margin-bottom:3px}.chord.selected{background:#07506a;color:white;box-shadow:var(--glow)}.stack{display:grid;gap:12px;align-content:start}.row{display:flex;gap:7px;align-items:center;flex-wrap:wrap}.small-label{color:var(--muted);font-size:10px;text-transform:uppercase}.control{padding:7px 9px;min-height:31px}.seg{display:flex;gap:4px;flex-wrap:wrap}.seg button{padding:6px 9px;font-size:10px}.seg button.active{background:#05749d}.range-row{display:grid;grid-template-columns:65px 1fr 36px;align-items:center;gap:8px;margin:9px 0}.range-row label{font-size:10px;color:#8bdff1}.range-row output{font-size:10px;color:var(--cyan);text-align:right}input[type=range]{width:100%;accent-color:#12cfff}input[type=number],select{background:#02090e;color:var(--cyan);border:1px solid #12658b;border-radius:4px;padding:6px;min-width:0}.bpm{font-size:30px;width:100%;text-align:center;margin:6px 0}.transport button{font-size:16px;min-width:48px;padding:9px}.led{display:inline-block;width:8px;height:8px;border-radius:50%;background:#0d4d62;margin-right:7px}.led.on{background:var(--cyan);box-shadow:var(--glow)}.toggle{display:flex;justify-content:space-between;align-items:center;margin:9px 0;color:#80dff4;font-size:11px}.switch{width:35px;height:18px;border-radius:12px;background:#092330;position:relative;border:1px solid #12658b}.switch:after{content:"";position:absolute;left:2px;top:2px;width:12px;height:12px;background:#25657c;border-radius:50%;transition:.15s}.switch.on{background:#07546c}.switch.on:after{left:18px;background:var(--cyan);box-shadow:var(--glow)}.global-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.global-grid select{width:100%}.harp-panel{padding:15px 18px 18px}.harp-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}.harp{height:255px;position:relative;margin-top:16px;border:2px solid #23cfff;border-radius:36px;background:linear-gradient(180deg,#020d15,#031b2b 50%,#020a12);box-shadow:inset 0 0 16px #05bfff66,0 0 14px #007bff55;overflow:hidden;touch-action:none;cursor:crosshair}.harp:before{content:"";position:absolute;inset:0;background-image:radial-gradient(#29bfffaa .8px,transparent 1px);background-size:17px 17px;opacity:.65}.strings{position:absolute;inset:0;display:grid;grid-template-columns:repeat(48,1fr)}.string{border-left:1px solid #21bfff;box-shadow:1px 0 4px #058eff66;position:relative}.string:nth-child(12n+1){border-left:2px solid #83f4ff;box-shadow:0 0 8px #00bfff}.octaves{display:grid;grid-template-columns:repeat(4,1fr);padding:0 6%;margin-top:4px;color:#74eaff;font-weight:bold;font-size:11px}.octaves span{position:relative}.octaves span:before{content:"";display:inline-block;width:7px;height:7px;background:var(--cyan);border-radius:50%;box-shadow:var(--glow);margin-right:6px}.strum-line{position:absolute;left:0;right:0;top:50%;height:2px;background:#d7ffff;box-shadow:0 0 8px #fff,0 0 24px #00d5ff;opacity:.95;pointer-events:none}.harp-hint{font-size:10px;color:#65b9d0}.status{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:9px;color:#55b6d0;font-size:10px}.footer{font-size:10px;color:#316d80;text-align:center;padding:3px}.meter{height:4px;background:#082432;border-radius:5px;overflow:hidden;margin-top:9px}.meter span{display:block;height:100%;width:0;background:var(--cyan);box-shadow:var(--glow);transition:width .08s}
+@media(max-width:1100px){.top{grid-template-columns:1fr 1fr}.brand{grid-column:1/-1}.middle{grid-template-columns:1.5fr 1fr}.chords{grid-template-columns:repeat(6,minmax(0,1fr))}}
+@media(max-width:650px){.shell{padding:7px;gap:8px}.top,.middle{grid-template-columns:1fr}.brand{grid-column:auto}.chords{grid-template-columns:repeat(4,minmax(0,1fr))}.harp{height:220px}.panel{padding:12px}.knob{width:40px;height:40px}}
+</style>
+</head>
+<body>
+<div class="shell">
+  <header class="top">
+    <section class="panel brand"><div class="logo">JUUM</div><div class="subtitle">STRUMPLATE SYNTH</div><div class="micro">HARP SENSOR · CHORD ENGINE · DUAL VOICE · USB MIDI CLOCK</div></section>
+    <section class="panel">
+      <h2 class="section-title">Main Voice</h2>
+      <select id="mainWave" class="voice-name" aria-label="Main voice waveform"><option value="sawtooth">01 · Analog Saw</option><option value="triangle">02 · Soft Triangle</option><option value="square">03 · Pulse Square</option><option value="sine">04 · Pure Sine</option></select>
+      <div class="knobs">
+        <div class="knob-wrap"><div class="knob" data-target="mainVol" data-min="0" data-max="1" data-value=".65"></div><div class="knob-label">Volume</div><div class="knob-value" id="mainVolVal">65%</div></div>
+        <div class="knob-wrap"><div class="knob" data-target="cutoff" data-min="100" data-max="8000" data-value="4200"></div><div class="knob-label">Cutoff</div><div class="knob-value" id="cutoffVal">4200 Hz</div></div>
+        <div class="knob-wrap"><div class="knob" data-target="resonance" data-min="0" data-max="18" data-value="2"></div><div class="knob-label">Resonance</div><div class="knob-value" id="resonanceVal">2.0</div></div>
+        <div class="knob-wrap"><div class="knob" data-target="attack" data-min=".005" data-max="1.5" data-value=".02"></div><div class="knob-label">Attack</div><div class="knob-value" id="attackVal">0.02 s</div></div>
+        <div class="knob-wrap"><div class="knob" data-target="decay" data-min=".02" data-max="2" data-value=".22"></div><div class="knob-label">Decay</div><div class="knob-value" id="decayVal">0.22 s</div></div>
+        <div class="knob-wrap"><div class="knob" data-target="sustain" data-min="0" data-max="1" data-value=".65"></div><div class="knob-label">Sustain</div><div class="knob-value" id="sustainVal">65%</div></div>
+        <div class="knob-wrap"><div class="knob" data-target="release" data-min=".03" data-max="3" data-value=".4"></div><div class="knob-label">Release</div><div class="knob-value" id="releaseVal">0.40 s</div></div>
+      </div>
+    </section>
+    <section class="panel">
+      <h2 class="section-title">Sub Voice</h2>
+      <select id="subWave" class="voice-name" aria-label="Sub voice waveform"><option value="triangle">12 · Deep Sub</option><option value="sine">13 · Pure Sine</option><option value="sawtooth">14 · Sub Saw</option><option value="square">15 · Hollow Pulse</option></select>
+      <div class="knobs">
+        <div class="knob-wrap"><div class="knob" data-target="subVol" data-min="0" data-max="1" data-value=".28"></div><div class="knob-label">Volume</div><div class="knob-value" id="subVolVal">28%</div></div>
+        <div class="knob-wrap"><div class="knob" data-target="subCutoff" data-min="100" data-max="8000" data-value="1600"></div><div class="knob-label">Cutoff</div><div class="knob-value" id="subCutoffVal">1600 Hz</div></div>
+        <div class="knob-wrap"><div class="knob" data-target="subRes" data-min="0" data-max="18" data-value="1"></div><div class="knob-label">Resonance</div><div class="knob-value" id="subResVal">1.0</div></div>
+        <div class="knob-wrap"><div class="knob" data-target="subAttack" data-min=".005" data-max="1.5" data-value=".03"></div><div class="knob-label">Attack</div><div class="knob-value" id="subAttackVal">0.03 s</div></div>
+        <div class="knob-wrap"><div class="knob" data-target="subDecay" data-min=".02" data-max="2" data-value=".3"></div><div class="knob-label">Decay</div><div class="knob-value" id="subDecayVal">0.30 s</div></div>
+        <div class="knob-wrap"><div class="knob" data-target="subSustain" data-min="0" data-max="1" data-value=".5"></div><div class="knob-label">Sustain</div><div class="knob-value" id="subSustainVal">50%</div></div>
+        <div class="knob-wrap"><div class="knob" data-target="subRelease" data-min=".03" data-max="3" data-value=".5"></div><div class="knob-label">Release</div><div class="knob-value" id="subReleaseVal">0.50 s</div></div>
+      </div>
+    </section>
+  </header>
+  <main class="middle">
+    <section class="panel">
+      <h2 class="section-title">Chord Select <span style="font-size:10px;color:var(--muted);font-weight:400">· PAIR CHORD BUTTONS</span></h2>
+      <div id="chords" class="chords"></div>
+      <div class="status"><span id="chordStatus">Selected: C Major</span><span>Shift-click / tap multiple chord colors to pair</span></div>
+    </section>
+    <div class="stack">
+      <section class="panel">
+        <h2 class="section-title">Effects</h2>
+        <div class="knobs">
+          <div class="knob-wrap"><div class="knob" data-target="reverb" data-min="0" data-max="1" data-value=".18"></div><div class="knob-label">Reverb</div><div class="knob-value" id="reverbVal">18%</div></div>
+          <div class="knob-wrap"><div class="knob" data-target="delay" data-min="0" data-max=".75" data-value=".12"></div><div class="knob-label">Delay</div><div class="knob-value" id="delayVal">12%</div></div>
+          <div class="knob-wrap"><div class="knob" data-target="chorus" data-min="0" data-max="1" data-value=".12"></div><div class="knob-label">Chorus</div><div class="knob-value" id="chorusVal">12%</div></div>
+        </div>
+        <div class="range-row"><label for="delayTime">Delay time</label><input id="delayTime" type="range" min=".05" max="1" step=".01" value=".25"><output id="delayTimeVal">0.25 s</output></div>
+      </section>
+      <section class="panel">
+        <h2 class="section-title">Arpeggiator</h2>
+        <div class="knobs">
+          <div class="knob-wrap"><div class="knob" data-target="arpRate" data-min="1" data-max="16" data-value="8"></div><div class="knob-label">Rate</div><div class="knob-value" id="arpRateVal">8 Hz</div></div>
+          <div class="knob-wrap"><div class="knob" data-target="arpOct" data-min="1" data-max="4" data-value="2"></div><div class="knob-label">Octaves</div><div class="knob-value" id="arpOctVal">2</div></div>
+          <div class="knob-wrap"><div class="knob" data-target="swing" data-min="0" data-max=".5" data-value=".08"></div><div class="knob-label">Swing</div><div class="knob-value" id="swingVal">8%</div></div>
+          <div class="knob-wrap"><div class="knob" data-target="gate" data-min=".1" data-max="1" data-value=".65"></div><div class="knob-label">Gate</div><div class="knob-value" id="gateVal">65%</div></div>
+        </div>
+        <div class="row" style="margin-top:10px"><span class="small-label">Mode</span><div class="seg" id="arpMode"><button class="active" data-mode="up">UP</button><button data-mode="down">DOWN</button><button data-mode="updown">UP/DOWN</button><button data-mode="random">RND</button></div></div>
+        <div class="row" style="margin-top:9px"><button class="control" id="arpToggle">▶ ARP OFF</button><span class="small-label" id="arpState">Manual strum</span></div>
+      </section>
+    </div>
+    <section class="panel">
+      <h2 class="section-title">MIDI / Clock</h2>
+      <div class="small-label"><span class="led" id="midiLed"></span><span id="midiStatus">USB MIDI: not connected</span></div>
+      <div class="bpm"><input id="bpm" type="number" min="30" max="300" value="120" aria-label="Tempo BPM" style="width:100%;font-size:28px;text-align:center"></div>
+      <div class="row transport"><button id="playBtn" title="Start MIDI clock">▶</button><button id="stopBtn" title="Stop MIDI clock">■</button><button id="midiConnect" title="Connect Web MIDI">MIDI</button></div>
+      <div class="meter"><span id="clockMeter"></span></div>
+      <div class="toggle"><span>Send MIDI clock</span><button class="switch on" id="sendClock" aria-label="Toggle send MIDI clock"></button></div>
+      <div class="toggle"><span>MIDI Thru notes</span><button class="switch" id="midiThru" aria-label="Toggle MIDI thru"></button></div>
+      <div class="toggle"><span>Receive clock</span><button class="switch" id="receiveClock" aria-label="Toggle receive MIDI clock"></button></div>
+      <div class="toggle"><span>Send notes</span><button class="switch on" id="sendNotes" aria-label="Toggle send MIDI notes"></button></div>
+      <div class="micro">Web MIDI requires a supported browser and usually HTTPS or localhost. MIDI clock sends 24 PPQN.</div>
+    </section>
+    <section class="panel">
+      <h2 class="section-title">Global</h2>
+      <div class="knobs">
+        <div class="knob-wrap"><div class="knob" data-target="master" data-min="0" data-max="1" data-value=".7"></div><div class="knob-label">Master</div><div class="knob-value" id="masterVal">70%</div></div>
+        <div class="knob-wrap"><div class="knob" data-target="tune" data-min="-100" data-max="100" data-value="0"></div><div class="knob-label">Tune</div><div class="knob-value" id="tuneVal">0 ct</div></div>
+      </div>
+      <div style="margin-top:12px"><label class="small-label" for="scale">Scale</label><select id="scale" style="width:100%;margin:5px 0 10px"><option value="chromatic">Chromatic</option><option value="major">Major</option><option value="minor">Natural Minor</option><option value="pentatonic">Pentatonic</option><option value="dorian">Dorian</option></select></div>
+      <div><label class="small-label" for="root">Root note</label><select id="root" style="width:100%;margin:5px 0 10px"></select></div>
+      <div><label class="small-label" for="midiChannel">MIDI channel</label><select id="midiChannel" style="width:100%;margin:5px 0 10px"></select></div>
+      <button class="control" id="panic" style="width:100%;margin-top:4px">ALL NOTES OFF</button>
+    </section>
+  </main>
+  <section class="panel harp-panel">
+    <div class="harp-head"><h2 class="section-title" style="margin:0">Strumplate <span style="font-weight:400;font-size:11px">· 4 OCTAVE HARP SENSOR</span></h2><span class="harp-hint">Touch, click, or drag across the strings to play</span></div>
+    <div class="octaves"><span>C1</span><span>C2</span><span>C3</span><span>C4</span></div>
+    <div id="harp" class="harp" role="application" aria-label="Four octave touch strumplate"><div id="strings" class="strings"></div><div class="strum-line"></div></div>
+    <div class="status"><span id="playStatus">Ready · 48 semitone lanes</span><span id="activeNotes">Active notes: 0</span><span id="audioStatus">Audio engine: waiting for interaction</span></div>
+  </section>
+  <div class="footer">JUUM · BROWSER SYNTH ENGINE · Save as index.html and publish with GitHub Pages</div>
+</div>
+<script>
+(() => {
+"use strict";
+const $ = id => document.getElementById(id);
+const state = {
+ mainVol:.65, subVol:.28, cutoff:4200, resonance:2, attack:.02, decay:.22, sustain:.65, release:.4,
+ subCutoff:1600, subRes:1, subAttack:.03, subDecay:.3, subSustain:.5, subRelease:.5,
+ reverb:.18, delay:.12, chorus:.12, arpRate:8, arpOct:2, swing:.08, gate:.65, master:.7, tune:0,
+ arp:false, arpMode:"up", playing:false, sendClock:true, midiThru:false, receiveClock:false, sendNotes:true
+};
+const fmt = (k,v) => {
+ if(k.toLowerCase().includes("vol")||["sustain","subSustain","reverb","delay","chorus","swing","gate","master"].includes(k)) return Math.round(v*100)+"%";
+ if(k==="cutoff"||k==="subCutoff") return Math.round(v)+" Hz";
+ if(k==="tune") return Math.round(v)+" ct";
+ if(k==="arpRate") return Math.round(v)+" Hz";
+ if(k==="arpOct") return Math.round(v);
+ if(k==="resonance"||k==="subRes") return Number(v).toFixed(1);
+ return Number(v).toFixed(2)+" s";
+};
+function setKnob(el,val){
+ const k=el.dataset.target,min=+el.dataset.min,max=+el.dataset.max;
+ val=Math.max(min,Math.min(max,val));state[k]=val;
+ const norm=(val-min)/(max-min);
+ el.style.setProperty("--angle",(-135+norm*270)+"deg");
+ const out=$(k+"Val");if(out)out.textContent=fmt(k,val);
+ if(audioCtx){
+   if(k==="master") masterGain.gain.setTargetAtTime(val,audioCtx.currentTime,.02);
+   if(k==="cutoff"&&mainFilters.length)mainFilters.forEach(f=>f.frequency.setTargetAtTime(val,audioCtx.currentTime,.02));
+   if(k==="subCutoff"&&subFilters.length)subFilters.forEach(f=>f.frequency.setTargetAtTime(val,audioCtx.currentTime,.02));
+   if(k==="reverb")wetGain.gain.setTargetAtTime(val,audioCtx.currentTime,.03);
+   if(k==="delay")delayWet.gain.setTargetAtTime(val,audioCtx.currentTime,.03);
+ }
+}
+document.querySelectorAll(".knob").forEach(el=>{
+ setKnob(el,+el.dataset.value);
+ let startY=0,startVal=0,dragging=false;
+ const move=e=>{if(!dragging)return;const rect=el.getBoundingClientRect();let dy=(startY-(e.clientY??startY));setKnob(el,startVal+dy*(+el.dataset.max- +el.dataset.min)/150);};
+ el.addEventListener("pointerdown",e=>{dragging=true;startY=e.clientY;startVal=state[el.dataset.target];el.setPointerCapture(e.pointerId);});
+ el.addEventListener("pointermove",move);el.addEventListener("pointerup",()=>dragging=false);el.addEventListener("pointercancel",()=>dragging=false);
+ el.addEventListener("wheel",e=>{e.preventDefault();setKnob(el,state[el.dataset.target]+(e.deltaY<0?1:-1)*(+el.dataset.max- +el.dataset.min)/100)},{passive:false});
+ el.addEventListener("dblclick",()=>setKnob(el,(+el.dataset.min+ +el.dataset.max)/2));
+});
+const chordTypes=["Maj","Min","7","Maj7","Min7","Dim","Aug","Sus4","Add9","6","m6","9","m9","11","m11","13","m13","7b9","7#9","Maj9","Maj13","mMaj7","sus2","7sus4","6/9","m7b5","dim7","7#9","9sus4","add11","Maj7#11","madd9","7b13","7#5","Maj6","mMaj9","7alt","sus4b9"];
+const chordIntervals=[[0,4,7],[0,3,7],[0,4,7,10],[0,4,7,11],[0,3,7,10],[0,3,6],[0,4,8],[0,5,7],[0,4,7,14],[0,4,7,9],[0,3,7,9],[0,4,7,10,14],[0,3,7,10,14],[0,4,7,10,14,17],[0,3,7,10,14,17],[0,4,7,10,14,21],[0,3,7,10,14,21],[0,4,7,10,13],[0,4,7,10,15],[0,4,7,11,14],[0,4,7,11,14,21],[0,3,7,11],[0,2,7],[0,5,7,10],[0,4,7,9,14],[0,3,6,10],[0,3,6,9],[0,4,7,10,15],[0,5,7,10,14],[0,4,7,17],[0,4,7,11,18],[0,3,7,14],[0,4,7,10,20],[0,4,8,10],[0,4,7,9],[0,3,7,11,14],[0,4,8,10,14],[0,5,7,13]];
+// 38 dedicated chord controls; multi-select allows chord colors to be combined into layered chord voicings.
+let selectedChords=[0];
+const chordBox=$("chords");
+chordTypes.forEach((name,i)=>{const b=document.createElement("button");b.className="chord"+(i===0?" selected":"");b.innerHTML=`<small>${String(i+1).padStart(2,"0")}</small>${name}`;b.title="Select "+name+" chord; select more than one to combine";b.addEventListener("click",e=>{if(e.shiftKey||e.ctrlKey||e.metaKey){selectedChords=selectedChords.includes(i)?selectedChords.filter(x=>x!==i):[...selectedChords,i];if(!selectedChords.length)selectedChords=[i];}else selectedChords=[i];document.querySelectorAll(".chord").forEach((x,j)=>x.classList.toggle("selected",selectedChords.includes(j)));$("chordStatus").textContent="Selected: "+selectedChords.map(x=>chordTypes[x]).join(" + ");if(state.arp)refreshArpNotes();});chordBox.appendChild(b)});
+$("strings").innerHTML=Array.from({length:48},()=>'<div class="string"></div>').join("");
+const noteNames=["C","C♯","D","D♯","E","F","F♯","G","G♯","A","A♯","B"];
+for(let i=0;i<12;i++){let o=document.createElement("option");o.value=i;o.textContent=noteNames[i];$("root").appendChild(o)}
+for(let i=1;i<=16;i++){let o=document.createElement("option");o.value=i;o.textContent="CH "+i;$("midiChannel").appendChild(o)}
+let audioCtx=null,masterGain=null,wetGain=null,delayWet=null,delayNode=null,mainFilters=[],subFilters=[],activeVoices=new Map(),midiAccess=null,midiOutput=null,clockTimer=null,clockTick=0,clockOrigin=0,lastClockTap=0;
+function initAudio(){
+ if(audioCtx)return;
+ const AC=window.AudioContext||window.webkitAudioContext;if(!AC){$("audioStatus").textContent="Audio unavailable in this browser";return}
+ audioCtx=new AC();masterGain=audioCtx.createGain();masterGain.gain.value=state.master;
+ const dry=audioCtx.createGain();dry.gain.value=1;
+ const convolver=audioCtx.createConvolver();const impulse=audioCtx.createBuffer(2,audioCtx.sampleRate*1.5,audioCtx.sampleRate);
+ for(let c=0;c<2;c++){let d=impulse.getChannelData(c);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,2.6)}
+ convolver.buffer=impulse;wetGain=audioCtx.createGain();wetGain.gain.value=state.reverb;
+ const delayIn=audioCtx.createGain();delayNode=audioCtx.createDelay(2);delayNode.delayTime.value=+$("delayTime").value;delayWet=audioCtx.createGain();delayWet.gain.value=state.delay;const feedback=audioCtx.createGain();feedback.gain.value=.22;
+ delayIn.connect(delayNode);delayNode.connect(feedback);feedback.connect(delayNode);delayNode.connect(delayWet);delayWet.connect(masterGain);
+ dry.connect(masterGain);dry.connect(convolver);convolver.connect(wetGain);wetGain.connect(masterGain);masterGain.connect(audioCtx.destination);
+ window.__juumAudio={dry,masterGain};$("audioStatus").textContent="Audio engine: ready";
+}
+function midiNoteOn(note,velocity=100){if(midiOutput&&state.sendNotes){const ch=+$("midiChannel").value-1;midiOutput.send([0x90|ch,note,velocity])}}
+function midiNoteOff(note){if(midiOutput&&state.sendNotes){const ch=+$("midiChannel").value-1;midiOutput.send([0x80|ch,note,0])}}
+function noteOn(midi,vel=0.85,duration=null){
+ initAudio();if(!audioCtx)return;if(audioCtx.state==="suspended")audioCtx.resume();
+ midi=Math.max(0,Math.min(127,Math.round(midi)));const key=midi+"-"+Math.random().toString(36).slice(2,7),freq=440*Math.pow(2,(midi-69+state.tune/100)/12),now=audioCtx.currentTime;
+ const mainOsc=audioCtx.createOscillator(),mainFilter=audioCtx.createBiquadFilter(),mainAmp=audioCtx.createGain();
+ mainOsc.type=$("mainWave").value;mainOsc.frequency.value=freq;mainFilter.type="lowpass";mainFilter.frequency.value=state.cutoff;mainFilter.Q.value=state.resonance;
+ mainAmp.gain.setValueAtTime(.0001,now);mainAmp.gain.exponentialRampToValueAtTime(Math.max(.001,state.mainVol*vel),now+state.attack);mainAmp.gain.exponentialRampToValueAtTime(Math.max(.001,state.mainVol*vel*state.sustain),now+state.attack+state.decay);
+ mainOsc.connect(mainFilter);mainFilter.connect(mainAmp);mainAmp.connect(window.__juumAudio.dry);mainOsc.start(now);mainFilters.push(mainFilter);
+ const subOsc=audioCtx.createOscillator(),subFilter=audioCtx.createBiquadFilter(),subAmp=audioCtx.createGain();
+ subOsc.type=$("subWave").value;subOsc.frequency.value=freq/2;subFilter.type="lowpass";subFilter.frequency.value=state.subCutoff;subFilter.Q.value=state.subRes;
+ subAmp.gain.setValueAtTime(.0001,now);subAmp.gain.exponentialRampToValueAtTime(Math.max(.001,state.subVol*vel),now+state.subAttack);subAmp.gain.exponentialRampToValueAtTime(Math.max(.001,state.subVol*vel*state.subSustain),now+state.subAttack+state.subDecay);
+ subOsc.connect(subFilter);subFilter.connect(subAmp);subAmp.connect(window.__juumAudio.dry);subOsc.start(now);subFilters.push(subFilter);
+ activeVoices.set(key,{midi,osc:[mainOsc,subOsc],amp:[mainAmp,subAmp],filters:[mainFilter,subFilter],released:false});
+ midiNoteOn(midi,Math.round(vel*127));updateActive();return key;
+}
+function noteOff(key){const v=activeVoices.get(key);if(!v||v.released)return;v.released=true;const now=audioCtx.currentTime;
+ v.amp.forEach((a,i)=>{a.gain.cancelScheduledValues(now);a.gain.setTargetAtTime(.0001,now,i?state.subRelease/4:state.release/4)});
+ v.osc.forEach(o=>{try{o.stop(now+Math.max(state.release,state.subRelease)+.12)}catch(e){}});
+ midiNoteOff(v.midi);setTimeout(()=>{activeVoices.delete(key);mainFilters=mainFilters.filter(f=>!v.filters.includes(f));subFilters=subFilters.filter(f=>!v.filters.includes(f));updateActive()},Math.max(state.release,state.subRelease)*1000+250);
+}
+function updateActive(){$("activeNotes").textContent="Active notes: "+activeVoices.size}
+function getScale(){return {chromatic:[0,1,2,3,4,5,6,7,8,9,10,11],major:[0,2,4,5,7,9,11],minor:[0,2,3,5,7,8,10],pentatonic:[0,2,4,7,9],dorian:[0,2,3,5,7,9,10]}[$("scale").value]}
+function getChordNotes(){
+ const root=+$("root").value;let all=[];
+ selectedChords.forEach((idx,j)=>chordIntervals[idx].forEach(n=>all.push(root+48+n)));
+ const unique=[...new Set(all)].sort((a,b)=>a-b),scale=getScale();
+ return unique.filter(n=>scale.some(s=>s===(n-root)%12)).length?unique.filter(n=>scale.includes((n-root+120)%12)):unique;
+}
+function harpNoteFromX(x){const rect=$("harp").getBoundingClientRect();const lane=Math.max(0,Math.min(47,Math.floor((x-rect.left)/rect.width*48)));const root=+$("root").value;const scale=getScale();const chrom=lane%12;let midi=36+lane; if($("scale").value!=="chromatic"){let degree=lane%scale.length,oct=Math.floor(lane/scale.length);midi=36+root+oct*12+scale[degree];}else midi=36+lane;return midi}
+let pointerDown=false,lastLane=-1,lastVoice=null;
+function strumAt(e){const r=$("harp").getBoundingClientRect(),lane=Math.max(0,Math.min(47,Math.floor((e.clientX-r.left)/r.width*48)));if(lane===lastLane)return;lastLane=lane;const n=harpNoteFromX(e.clientX);if(lastVoice)noteOff(lastVoice);lastVoice=noteOn(n,.8);$("playStatus").textContent="Strum · "+noteNames[n%12]+(Math.floor(n/12)-1);$("audioStatus").textContent="Audio engine: playing";if(lastVoice)setTimeout(()=>{if(lastVoice)noteOff(lastVoice);lastVoice=null},350)}
+$("harp").addEventListener("pointerdown",e=>{pointerDown=true;lastLane=-1;initAudio();$("harp").setPointerCapture(e.pointerId);strumAt(e)});
+$("harp").addEventListener("pointermove",e=>{if(pointerDown)strumAt(e)});
+function endStrum(){pointerDown=false;lastLane=-1;if(lastVoice){noteOff(lastVoice);lastVoice=null}}
+$("harp").addEventListener("pointerup",endStrum);$("harp").addEventListener("pointercancel",endStrum);$("harp").addEventListener("pointerleave",e=>{if(pointerDown&&!e.buttons)endStrum()});
+let arpInterval=null,arpIndex=0,arpDir=1,arpNotes=[];
+function refreshArpNotes(){arpNotes=[];const base=getChordNotes();for(let o=0;o<Math.max(1,Math.round(state.arpOct));o++)base.forEach(n=>arpNotes.push(n+o*12));arpNotes=[...new Set(arpNotes)].sort((a,b)=>a-b)}
+function arpStep(){
+ if(!state.arp||!arpNotes.length)return;let n;
+ if(state.arpMode==="random")n=arpNotes[Math.floor(Math.random()*arpNotes.length)];
+ else if(state.arpMode==="down")n=arpNotes[arpNotes.length-1-(arpIndex++%arpNotes.length)];
+ else if(state.arpMode==="updown"){n=arpNotes[arpIndex];arpIndex+=arpDir;if(arpIndex>=arpNotes.length){arpIndex=arpNotes.length-1;arpDir=-1}else if(arpIndex<0){arpIndex=0;arpDir=1}}
+ else n=arpNotes[arpIndex++%arpNotes.length];
+ const key=noteOn(n,.8);setTimeout(()=>noteOff(key),Math.max(50,1000/state.arpRate*state.gate));
+ $("playStatus").textContent="Arpeggiator · "+noteNames[n%12]+(Math.floor(n/12)-1);
+}
+function startArp(){initAudio();state.arp=true;refreshArpNotes();clearInterval(arpInterval);arpInterval=setInterval(arpStep,1000/state.arpRate);$("arpToggle").textContent="■ ARP ON";$("arpToggle").classList.add("active");$("arpState").textContent="Running";if(audioCtx.state==="suspended")audioCtx.resume()}
+function stopArp(){state.arp=false;clearInterval(arpInterval);arpInterval=null;$("arpToggle").textContent="▶ ARP OFF";$("arpToggle").classList.remove("active");$("arpState").textContent="Manual strum"}
+$("arpToggle").addEventListener("click",()=>state.arp?stopArp():startArp());
+document.querySelectorAll("#arpMode button").forEach(b=>b.addEventListener("click",()=>{state.arpMode=b.dataset.mode;document.querySelectorAll("#arpMode button").forEach(x=>x.classList.toggle("active",x===b));arpIndex=0}));
+$("delayTime").addEventListener("input",e=>{ $("delayTimeVal").textContent=(+e.target.value).toFixed(2)+" s";if(delayNode)delayNode.delayTime.setTargetAtTime(+e.target.value,audioCtx.currentTime,.02)});
+function toggle(id,key){$(id).addEventListener("click",()=>{state[key]=!state[key];$(id).classList.toggle("on",state[key]);if(key==="arp")state[key]?startArp():stopArp()})}
+toggle("sendClock","sendClock");toggle("midiThru","midiThru");toggle("receiveClock","receiveClock");toggle("sendNotes","sendNotes");
+function sendClockByte(byte){if(midiOutput&&state.sendClock){try{midiOutput.send([byte])}catch(e){}}}
+function startClock(){if(state.playing)return;state.playing=true;clockTick=0;clockOrigin=performance.now();sendClockByte(0xFA);$("playBtn").classList.add("active");$("playStatus").textContent="MIDI clock running";const tick=()=>{if(!state.playing)return;const bpm=Math.max(30,Math.min(300,+$("bpm").value||120));const interval=60000/(bpm*24);const due=clockOrigin+clockTick*interval;const delay=Math.max(0,due-performance.now());clockTimer=setTimeout(()=>{if(!state.playing)return;sendClockByte(0xF8);clockTick++;$("clockMeter").style.width=((clockTick%24)/24*100)+"%";tick()},delay)};tick()}
+function stopClock(){state.playing=false;clearTimeout(clockTimer);sendClockByte(0xFC);$("playBtn").classList.remove("active");$("clockMeter").style.width="0%";$("playStatus").textContent="MIDI clock stopped"}
+$("playBtn").addEventListener("click",startClock);$("stopBtn").addEventListener("click",stopClock);
+$("midiConnect").addEventListener("click",async()=>{
+ if(!navigator.requestMIDIAccess){$("midiStatus").textContent="Web MIDI unsupported";return}
+ try{midiAccess=await navigator.requestMIDIAccess({sysex:false});const outputs=[...midiAccess.outputs.values()];const inputs=[...midiAccess.inputs.values()];midiOutput=outputs[0]||null;
+ $("midiStatus").textContent=midiOutput?"USB MIDI: "+midiOutput.name:"No MIDI output found";$("midiLed").classList.toggle("on",!!midiOutput);$("midiConnect").classList.toggle("active",!!midiOutput);
+ inputs.forEach(input=>input.onmidimessage=e=>{const [status,n,v]=e.data;if(status===0xF8&&state.receiveClock){/* incoming clock detected */}else if((status&0xF0)===0x90&&v>0&&state.midiThru&&midiOutput)midiOutput.send([status,n,v]);else if((status&0xF0)===0x80&&state.midiThru&&midiOutput)midiOutput.send([status,n,v])});
+ }catch(err){$("midiStatus").textContent="MIDI permission denied or unavailable"}
+});
+$("panic").addEventListener("click",()=>{for(const [k] of activeVoices)noteOff(k);if(midiOutput){for(let ch=0;ch<16;ch++)midiOutput.send([0xB0|ch,123,0])}stopClock();stopArp()});
+$("bpm").addEventListener("change",e=>{e.target.value=Math.max(30,Math.min(300,+e.target.value||120))});
+$("scale").addEventListener("change",()=>{if(state.arp)refreshArpNotes()});$("root").addEventListener("change",()=>{if(state.arp)refreshArpNotes()});
+document.addEventListener("keydown",e=>{if(e.code==="Space"&&!/INPUT|SELECT|BUTTON/.test(e.target.tagName)){e.preventDefault();state.playing?stopClock():startClock()}});
+})();
+</script>
+</body>
+</html>
