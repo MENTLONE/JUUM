@@ -194,9 +194,9 @@ function initAudio(){
  const dry=audioCtx.createGain();dry.gain.value=1;effectsGain=audioCtx.createGain();effectsGain.gain.value=state.effectsVol;analyser=audioCtx.createAnalyser();analyser.fftSize=2048;analyser.smoothingTimeConstant=.82;
  const convolver=audioCtx.createConvolver();const impulse=audioCtx.createBuffer(2,audioCtx.sampleRate*1.5,audioCtx.sampleRate);
  for(let c=0;c<2;c++){let d=impulse.getChannelData(c);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,2.6)}
- convolver.buffer=impulse;wetGain=audioCtx.createGain();wetGain.gain.value=state.reverb;
+ convolver.buffer=impulse;wetGain=audioCtx.createGain();wetGain.gain.value=state.reverbEnabled?state.reverb:0;
  const delayIn=audioCtx.createGain();delayNode=audioCtx.createDelay(2);delayNode.delayTime.value=+$("delayTime").value;delayWet=audioCtx.createGain();delayWet.gain.value=state.delayEnabled?state.delay:0;const feedback=audioCtx.createGain();feedback.gain.value=.22;
- delayIn.connect(delayNode);delayNode.connect(feedback);feedback.connect(delayNode);delayNode.connect(delayWet);delayWet.connect(effectsGain);
+ dry.connect(delayIn);delayIn.connect(delayNode);delayNode.connect(feedback);feedback.connect(delayNode);delayNode.connect(delayWet);delayWet.connect(effectsGain);
  // Stereo chorus: two short delays modulated by an LFO. The wet return shares the FX level control.
  const chorusInput=audioCtx.createGain();chorusDelayL=audioCtx.createDelay(.06);chorusDelayR=audioCtx.createDelay(.06);chorusDelayL.delayTime.value=.018;chorusDelayR.delayTime.value=.026;
  const chorusGainL=audioCtx.createGain(),chorusGainR=audioCtx.createGain(),chorusMerge=audioCtx.createGain();chorusWet=audioCtx.createGain();chorusWet.gain.value=state.chorusEnabled?state.chorus:0;
