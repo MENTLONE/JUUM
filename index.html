@@ -126,7 +126,7 @@ const fmt = (k,v) => {
  if(k==="resonance"||k==="subRes") return Number(v).toFixed(1);
  return Number(v).toFixed(2)+" s";
 };
-let audioCtx=null,masterGain=null,wetGain=null,delayWet=null,delayNode=null,mainFilters=[],subFilters=[],activeVoices=new Map(),midiAccess=null,midiOutput=null,clockTimer=null,clockTick=0,clockOrigin=0,lastClockTap=0;
+let audioCtx=null,masterGain=null,wetGain=null,delayWet=null,delayNode=null,mainFilters=[],subFilters=[],activeVoices=new Map(),midiAccess=null,midiOutput=null,clockTimer=null,clockTick=0,clockOrigin=0,lastClockTap=0,analyser=null,scopeFrame=0,seqTimer=null,seqStep=0,seqEnabled=Array(16).fill(false);
 function setKnob(el,val){
  const k=el.dataset.target,min=+el.dataset.min,max=+el.dataset.max;
  val=Math.max(min,Math.min(max,val));state[k]=val;
@@ -165,13 +165,13 @@ function initAudio(){
  if(audioCtx)return;
  const AC=window.AudioContext||window.webkitAudioContext;if(!AC){$("audioStatus").textContent="Audio unavailable in this browser";return}
  audioCtx=new AC();masterGain=audioCtx.createGain();masterGain.gain.value=state.master;
- const dry=audioCtx.createGain();dry.gain.value=1;
+ const dry=audioCtx.createGain();dry.gain.value=1;analyser=audioCtx.createAnalyser();analyser.fftSize=2048;analyser.smoothingTimeConstant=.82;
  const convolver=audioCtx.createConvolver();const impulse=audioCtx.createBuffer(2,audioCtx.sampleRate*1.5,audioCtx.sampleRate);
  for(let c=0;c<2;c++){let d=impulse.getChannelData(c);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,2.6)}
  convolver.buffer=impulse;wetGain=audioCtx.createGain();wetGain.gain.value=state.reverb;
  const delayIn=audioCtx.createGain();delayNode=audioCtx.createDelay(2);delayNode.delayTime.value=+$("delayTime").value;delayWet=audioCtx.createGain();delayWet.gain.value=state.delay;const feedback=audioCtx.createGain();feedback.gain.value=.22;
  delayIn.connect(delayNode);delayNode.connect(feedback);feedback.connect(delayNode);delayNode.connect(delayWet);delayWet.connect(masterGain);
- dry.connect(masterGain);dry.connect(convolver);convolver.connect(wetGain);wetGain.connect(masterGain);masterGain.connect(audioCtx.destination);
+ dry.connect(masterGain);dry.connect(convolver);convolver.connect(wetGain);wetGain.connect(masterGain);masterGain.connect(analyser);analyser.connect(audioCtx.destination);startScope();
  window.__juumAudio={dry,masterGain,convolver,wetGain,delayWet};$("audioStatus").textContent="Audio engine: ready";
 }
 function midiNoteOn(note,velocity=100){if(midiOutput&&state.sendNotes){const ch=+$("midiChannel").value-1;midiOutput.send([0x90|ch,note,velocity])}}
@@ -190,6 +190,7 @@ function noteOn(midi,vel=0.85,duration=null){
  activeVoices.set(key,{midi,osc:[mainOsc,subOsc],amp:[mainAmp,subAmp],filters:[mainFilter,subFilter],released:false});
  midiNoteOn(midi,Math.round(vel*127));updateActive();return key;
 }
+function startScope(){if(scopeFrame)return;const canvas=$("waveform"),ctx=canvas.getContext("2d");const draw=()=>{scopeFrame=requestAnimationFrame(draw);const w=canvas.width,h=canvas.height;ctx.clearRect(0,0,w,h);ctx.strokeStyle="#0b3850";ctx.beginPath();ctx.moveTo(0,h/2);ctx.lineTo(w,h/2);ctx.stroke();if(!analyser)return;const data=new Uint8Array(analyser.fftSize);analyser.getByteTimeDomainData(data);ctx.strokeStyle="#26dfff";ctx.lineWidth=2;ctx.beginPath();for(let i=0;i<data.length;i++){const x=i/(data.length-1)*w,y=data[i]/255*h;if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y)}ctx.stroke();$("scopeStatus").textContent=activeVoices.size?"LIVE · "+activeVoices.size+" active voice(s)":"LIVE · audio engine ready"};draw()}
 function noteOff(key){const v=activeVoices.get(key);if(!v||v.released)return;v.released=true;const now=audioCtx.currentTime;
  v.amp.forEach((a,i)=>{a.gain.cancelScheduledValues(now);a.gain.setTargetAtTime(.0001,now,i?state.subRelease/4:state.release/4)});
  v.osc.forEach(o=>{try{o.stop(now+Math.max(state.release,state.subRelease)+.12)}catch(e){}});
