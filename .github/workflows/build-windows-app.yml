@@ -1,0 +1,39 @@
+name: Build JUUM for Windows
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "index.html"
+      - "manual.html"
+      - "electron/**"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/build-windows-app.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm install
+      - name: Build Windows installer and portable app
+        run: npm run dist
+      - name: Upload Windows builds
+        uses: actions/upload-artifact@v4
+        with:
+          name: JUUM-Windows
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 30
