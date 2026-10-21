@@ -15,6 +15,8 @@ This is the first USB-serial controller prototype for JUUM. The ESP32-S3 reads p
 - 4 × normally-open momentary push buttons for Play, Stop, Randomize Notes, and Panic.
 - 2 × MCP23017 16-bit I²C GPIO expanders (DIP or breakout boards).
 - 16 × WS2812B/NeoPixel LEDs, or one 16-pixel strip/ring that can be arranged behind the step buttons.
+- 1 × 74AHCT125 (or equivalent 5 V logic buffer) recommended for reliable 3.3 V ESP32-to-5 V LED data signaling.
+- 1 × regulated 5 V, 1 A supply for the LEDs (recommended; do not feed LED-strip current through the ESP32 board).
 - 8 × 100 nF ceramic capacitors for optional potentiometer ADC smoothing (one from each wiper to GND).
 - 2 × 4.7 kΩ I²C pull-up resistors only if the breakout boards do not already provide pull-ups.
 - 1 × breadboard/perfboard, hookup wire, headers, USB data cable, enclosure, knobs and button caps.
