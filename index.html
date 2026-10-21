@@ -332,7 +332,7 @@ function randomizeSequencerNotes(){
  stepsRender();
 }
 $("randomizeNotes").addEventListener("click",randomizeSequencerNotes);
-function sequencerTick(){const buttons=$("steps").children;for(let i=0;i<buttons.length;i++)buttons[i].classList.toggle("playing",i===seqStep);if(seqEnabled[seqStep]){const notes=getChordNotes();const note=seqNotes[seqStep]!==null?seqNotes[seqStep]:(notes.length?notes[Math.floor(seqStep/4)%notes.length]+Math.floor(seqStep/8)*12:null);if(note!==null){const key=noteOn(note,.75);if(key)setTimeout(()=>noteOff(key),Math.max(90,60000/(+$("seqBpm").value||120)*.65))}}seqStep=(seqStep+1)%16}
+function sequencerTick(){const buttons=$("steps").children;for(let i=0;i<buttons.length;i++)buttons[i].classList.toggle("playing",i===seqStep);if(seqEnabled[seqStep]){const notes=getChordNotes();const note=seqNotes[seqStep]!==null?seqNotes[seqStep]:(notes.length?notes[Math.floor(seqStep/4)%notes.length]+Math.floor(seqStep/8)*12:null);if(note!==null){const key=noteOn(note,.75);if(key)setTimeout(()=>noteOff(key),Math.max(90,60000/(+$("seqBpm").value||120)*.65))}}seqStep=(seqStep+1)%16;syncJuumHardwareLeds()}
 function sequencerStart(){sequencerStop();const bpm=Math.max(30,Math.min(300,+$("seqBpm").value||120));seqStep=0;sequencerTick();seqTimer=setInterval(sequencerTick,60000/bpm/4);$("seqStatus").textContent="PLAYING · "+bpm+" BPM";$("seqPlay").classList.add("active")}
 function sequencerStop(){if(seqTimer){clearInterval(seqTimer);seqTimer=null}Array.from($("steps").children).forEach(b=>b.classList.remove("playing"));$("seqStatus").textContent="Stopped · 16-step pattern";$("seqPlay").classList.remove("active")}
 $("seqPlay").addEventListener("click",sequencerStart);$("seqStop").addEventListener("click",sequencerStop);stepsRender();
@@ -357,6 +357,7 @@ const hardwareStatus=(msg,connected=false)=>{
  if($("hardwareConnect"))$("hardwareConnect").disabled=connected;
  if($("hardwareDisconnect"))$("hardwareDisconnect").disabled=!connected;
 };
+async function syncJuumHardwareLeds(){const steps=Array.from($("steps")?.children||[]).map(b=>b.classList.contains("enabled"));sendJuumHardwareMessage({type:"leds",steps,playhead:seqTimer?((seqStep+15)%16):-1})}
 async function connectJuumHardware(){
  if(!("serial" in navigator)){hardwareStatus("Web Serial unavailable · use current Chrome or Edge");return}
  try{
@@ -367,6 +368,7 @@ async function connectJuumHardware(){
   juumSerialWriter=encoder.writable.getWriter();
   juumSerialKeepReading=true;
   hardwareStatus("Connected · JUUM controller",true);
+  syncJuumHardwareLeds();
   readJuumHardware();
  }catch(e){hardwareStatus("Connect failed · "+(e.message||e));}
 }
@@ -413,7 +415,7 @@ function handleJuumHardwareMessage(m){
  if(m.type==="hello"){hardwareStatus("Connected · "+(m.name||"JUUM controller"),true);return}
  if(m.type==="pot"){changeHardwareKnob(Number(m.id),Number(m.value)/4095);return}
  if(m.type==="step"){
-  const b=$("steps")?.children?.[Number(m.id)];if(b)b.click();return;
+  const b=$("steps")?.children?.[Number(m.id)];if(b)b.click();syncJuumHardwareLeds();return;
  }
  if(m.type==="button"){
   const actions=[()=> $("seqPlay")?.click(),()=> $("seqStop")?.click(),()=> $("randomizeNotes")?.click(),()=> $("panic")?.click()];
