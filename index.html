@@ -122,7 +122,7 @@ const state = {
  arp:false, arpMode:"up", playing:false, sendClock:true, midiThru:false, receiveClock:false, sendNotes:true
 };
 const fmt = (k,v) => {
- if(k.toLowerCase().includes("vol")||["sustain","subSustain","reverb","delay","chorus","swing","gate","master"].includes(k)) return Math.round(v*100)+"%";
+ if(k.toLowerCase().includes("vol")||["sustain","subSustain","reverb","delay","chorus","phaseBloom","waveCharacter","swing","gate","master"].includes(k)) return Math.round(v*100)+"%";
  if(k==="cutoff"||k==="subCutoff") return Math.round(v)+" Hz";
  if(k==="tune"||k==="detune") return Math.round(v)+" ct";
  if(k==="arpRate") return Math.round(v)+" Hz";
