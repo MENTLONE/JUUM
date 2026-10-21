@@ -123,6 +123,7 @@ const fmt = (k,v) => {
  if(k==="resonance"||k==="subRes") return Number(v).toFixed(1);
  return Number(v).toFixed(2)+" s";
 };
+let audioCtx=null,masterGain=null,wetGain=null,delayWet=null,delayNode=null,mainFilters=[],subFilters=[],activeVoices=new Map(),midiAccess=null,midiOutput=null,clockTimer=null,clockTick=0,clockOrigin=0,lastClockTap=0;
 function setKnob(el,val){
  const k=el.dataset.target,min=+el.dataset.min,max=+el.dataset.max;
  val=Math.max(min,Math.min(max,val));state[k]=val;
@@ -156,7 +157,6 @@ $("strings").innerHTML=Array.from({length:48},()=>'<div class="string"></div>').
 const noteNames=["C","C♯","D","D♯","E","F","F♯","G","G♯","A","A♯","B"];
 for(let i=0;i<12;i++){let o=document.createElement("option");o.value=i;o.textContent=noteNames[i];$("root").appendChild(o)}
 for(let i=1;i<=16;i++){let o=document.createElement("option");o.value=i;o.textContent="CH "+i;$("midiChannel").appendChild(o)}
-let audioCtx=null,masterGain=null,wetGain=null,delayWet=null,delayNode=null,mainFilters=[],subFilters=[],activeVoices=new Map(),midiAccess=null,midiOutput=null,clockTimer=null,clockTick=0,clockOrigin=0,lastClockTap=0;
 function initAudio(){
  if(audioCtx)return;
  const AC=window.AudioContext||window.webkitAudioContext;if(!AC){$("audioStatus").textContent="Audio unavailable in this browser";return}
