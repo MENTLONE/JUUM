@@ -1,0 +1,38 @@
+name: Publish JUUM PDF manual
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'manual.html'
+      - '.github/workflows/pdf-manual.yml'
+permissions:
+  contents: write
+jobs:
+  pdf:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install PDF renderer
+        run: npm install --no-save playwright
+      - name: Render manual to PDF
+        run: |
+          npx playwright install --with-deps chromium
+          node - <<'NODE'
+          const {chromium} = require('playwright');
+          (async()=>{
+            const browser=await chromium.launch({headless:true});
+            const page=await browser.newPage({viewport:{width:1100,height:1400}});
+            await page.goto('file://'+process.cwd()+'/manual.html');
+            await page.pdf({path:'JUUM_User_Manual.pdf',format:'Letter',printBackground:true,margin:{top:'0.45in',bottom:'0.45in',left:'0.4in',right:'0.4in'}});
+            await browser.close();
+          })().catch(e=>{console.error(e);process.exit(1)});
+          NODE
+      - name: Commit generated PDF
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add JUUM_User_Manual.pdf
+          git diff --cached --quiet || (git commit -m "Generate downloadable JUUM PDF manual" && git push)
