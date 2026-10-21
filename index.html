@@ -22,6 +22,7 @@ button,input,select{font:inherit}button{color:var(--text);background:linear-grad
       <select id="mainWave" class="voice-name" aria-label="Main voice waveform"><option value="sawtooth">01 · Analog Saw</option><option value="triangle">02 · Soft Triangle</option><option value="square">03 · Pulse Square</option><option value="sine">04 · Pure Sine</option></select>
       <div class="knobs">
         <div class="knob-wrap"><div class="knob" data-target="mainVol" data-min="0" data-max="1" data-value=".65"></div><div class="knob-label">Volume</div><div class="knob-value" id="mainVolVal">65%</div></div>
+        <div class="knob-wrap"><div class="knob" data-target="waveCharacter" data-min="0" data-max="1" data-value=".35"></div><div class="knob-label">Wave Character</div><div class="knob-value" id="waveCharacterVal">35%</div></div>
         <div class="knob-wrap"><div class="knob" data-target="cutoff" data-min="100" data-max="8000" data-value="4200"></div><div class="knob-label">Cutoff</div><div class="knob-value" id="cutoffVal">4200 Hz</div></div>
         <div class="knob-wrap"><div class="knob" data-target="resonance" data-min="0" data-max="18" data-value="2"></div><div class="knob-label">Resonance</div><div class="knob-value" id="resonanceVal">2.0</div></div>
         <div class="knob-wrap"><div class="knob" data-target="attack" data-min=".005" data-max="1.5" data-value=".02"></div><div class="knob-label">Attack</div><div class="knob-value" id="attackVal">0.02 s</div></div>
@@ -59,9 +60,10 @@ button,input,select{font:inherit}button{color:var(--text);background:linear-grad
           <div class="knob-wrap"><div class="knob" data-target="reverb" data-min="0" data-max="1" data-value=".18"></div><div class="knob-label">Reverb</div><div class="knob-value" id="reverbVal">18%</div></div>
           <div class="knob-wrap"><div class="knob" data-target="delay" data-min="0" data-max=".75" data-value=".12"></div><div class="knob-label">Delay</div><div class="knob-value" id="delayVal">12%</div></div>
           <div class="knob-wrap"><div class="knob" data-target="chorus" data-min="0" data-max="1" data-value=".12"></div><div class="knob-label">Chorus</div><div class="knob-value" id="chorusVal">12%</div></div>
+          <div class="knob-wrap"><div class="knob" data-target="phaseBloom" data-min="0" data-max="1" data-value=".22"></div><div class="knob-label">Phase Bloom</div><div class="knob-value" id="phaseBloomVal">22%</div></div>
           <div class="knob-wrap"><div class="knob" data-target="effectsVol" data-min="0" data-max="1" data-value=".7"></div><div class="knob-label">FX Volume</div><div class="knob-value" id="effectsVolVal">70%</div></div>
         </div>
-        <div class="effect-switches"><div class="toggle"><span>Reverb</span><button class="switch on" id="reverbEnabled" aria-label="Enable reverb" aria-pressed="true"></button></div><div class="toggle"><span>Delay</span><button class="switch on" id="delayEnabled" aria-label="Enable delay" aria-pressed="true"></button></div><div class="toggle"><span>Chorus</span><button class="switch on" id="chorusEnabled" aria-label="Enable chorus" aria-pressed="true"></button></div></div><div class="range-row"><label for="delayTime">Delay time</label><input id="delayTime" type="range" min=".05" max="1" step=".01" value=".25"><output id="delayTimeVal">0.25 s</output></div>
+        <div class="effect-switches"><div class="toggle"><span>Phase Bloom</span><button class="switch on" id="phaseBloomEnabled" aria-label="Enable Phase Bloom" aria-pressed="true"></button></div><div class="toggle"><span>Reverb</span><button class="switch on" id="reverbEnabled" aria-label="Enable reverb" aria-pressed="true"></button></div><div class="toggle"><span>Delay</span><button class="switch on" id="delayEnabled" aria-label="Enable delay" aria-pressed="true"></button></div><div class="toggle"><span>Chorus</span><button class="switch on" id="chorusEnabled" aria-label="Enable chorus" aria-pressed="true"></button></div></div><div class="range-row"><label for="delayTime">Delay time</label><input id="delayTime" type="range" min=".05" max="1" step=".01" value=".25"><output id="delayTimeVal">0.25 s</output></div>
       </section>
       <section class="panel">
         <h2 class="section-title">Arpeggiator</h2>
@@ -113,10 +115,10 @@ button,input,select{font:inherit}button{color:var(--text);background:linear-grad
 "use strict";
 const $ = id => document.getElementById(id);
 const state = {
- mainVol:.65, subVol:.28, cutoff:4200, resonance:2, attack:.02, decay:.22, sustain:.65, release:.4,
+ mainVol:.65, subVol:.28, cutoff:4200, resonance:2, waveCharacter:.35, attack:.02, decay:.22, sustain:.65, release:.4,
  subCutoff:1600, subRes:1, subAttack:.03, subDecay:.3, subSustain:.5, subRelease:.5, detune:0,
- mainEnabled:true,subEnabled:true,reverbEnabled:true,delayEnabled:true,chorusEnabled:true,
- reverb:.18, delay:.12, chorus:.12, effectsVol:.7, arpRate:8, arpOct:2, swing:.08, gate:.65, master:.7, tune:0,
+ mainEnabled:true,subEnabled:true,reverbEnabled:true,delayEnabled:true,chorusEnabled:true,phaseBloomEnabled:true,
+ reverb:.18, delay:.12, chorus:.12, phaseBloom:.22, effectsVol:.7, arpRate:8, arpOct:2, swing:.08, gate:.65, master:.7, tune:0,
  arp:false, arpMode:"up", playing:false, sendClock:true, midiThru:false, receiveClock:false, sendNotes:true
 };
 const fmt = (k,v) => {
@@ -128,7 +130,7 @@ const fmt = (k,v) => {
  if(k==="resonance"||k==="subRes") return Number(v).toFixed(1);
  return Number(v).toFixed(2)+" s";
 };
-let audioCtx=null,masterGain=null,effectsGain=null,wetGain=null,delayWet=null,delayNode=null,chorusWet=null,chorusDelayL=null,chorusDelayR=null,chorusLfo=null,chorusLfoGain=null,mainFilters=[],subFilters=[],activeVoices=new Map(),midiAccess=null,midiOutput=null,clockTimer=null,clockTick=0,clockOrigin=0,lastClockTap=0,analyser=null,scopeFrame=0,seqTimer=null,seqStep=0,seqEnabled=Array(16).fill(false),seqNotes=Array(16).fill(null);
+let audioCtx=null,masterGain=null,effectsGain=null,wetGain=null,delayWet=null,delayNode=null,chorusWet=null,chorusDelayL=null,chorusDelayR=null,chorusLfo=null,chorusLfoGain=null,phaseBloomWet=null,phaseBloomFilters=[],phaseBloomLfo=null,phaseBloomLfoGain=null,phaseBloomFeedback=null,mainFilters=[],subFilters=[],activeVoices=new Map(),midiAccess=null,midiOutput=null,clockTimer=null,clockTick=0,clockOrigin=0,lastClockTap=0,analyser=null,scopeFrame=0,seqTimer=null,seqStep=0,seqEnabled=Array(16).fill(false),seqNotes=Array(16).fill(null);
 function setKnob(el,val){
  const k=el.dataset.target,min=+el.dataset.min,max=+el.dataset.max;
  val=Math.max(min,Math.min(max,val));state[k]=val;
@@ -144,6 +146,7 @@ function setKnob(el,val){
    if(k==="reverb")wetGain.gain.setTargetAtTime(state.reverbEnabled?val:0,audioCtx.currentTime,.03);
    if(k==="delay"&&delayWet)delayWet.gain.setTargetAtTime(state.delayEnabled?val:0,audioCtx.currentTime,.03);
    if(k==="chorus"&&chorusWet)chorusWet.gain.setTargetAtTime(state.chorusEnabled?val:0,audioCtx.currentTime,.03);
+   if(k==="phaseBloom"&&phaseBloomWet)phaseBloomWet.gain.setTargetAtTime(state.phaseBloomEnabled?val:0,audioCtx.currentTime,.03);
  }
 }
 document.querySelectorAll(".knob").forEach(el=>{
@@ -203,20 +206,38 @@ function initAudio(){
  chorusLfo=audioCtx.createOscillator();chorusLfo.type="sine";chorusLfo.frequency.value=.8;chorusLfoGain=audioCtx.createGain();chorusLfoGain.gain.value=.008;
  chorusLfo.connect(chorusLfoGain);chorusLfoGain.connect(chorusDelayL.delayTime);chorusLfoGain.connect(chorusDelayR.delayTime);chorusLfo.start();
  chorusInput.connect(chorusDelayL);chorusInput.connect(chorusDelayR);chorusDelayL.connect(chorusGainL);chorusDelayR.connect(chorusGainR);chorusGainL.connect(chorusMerge);chorusGainR.connect(chorusMerge);chorusMerge.connect(chorusWet);chorusWet.connect(effectsGain);
+ /* PHASE BLOOM: four modulated all-pass stages create a moving, resonant stereo-like shimmer. */
+ const phaseInput=audioCtx.createGain();phaseBloomWet=audioCtx.createGain();phaseBloomWet.gain.value=state.phaseBloomEnabled?state.phaseBloom:0;let phaseNode=phaseInput;
+ phaseBloomFilters=[];for(let i=0;i<4;i++){const ap=audioCtx.createBiquadFilter();ap.type="allpass";ap.frequency.value=520+i*430;ap.Q.value=.7;phaseNode.connect(ap);phaseNode=ap;phaseBloomFilters.push(ap)}
+ phaseBloomLfo=audioCtx.createOscillator();phaseBloomLfo.type="sine";phaseBloomLfo.frequency.value=.19;phaseBloomLfoGain=audioCtx.createGain();phaseBloomLfoGain.gain.value=260;phaseBloomLfo.connect(phaseBloomLfoGain);phaseBloomFilters.forEach((ap,i)=>{phaseBloomLfoGain.connect(ap.frequency);ap.frequency.value=520+i*430});phaseBloomLfo.start();
+ phaseNode.connect(phaseBloomWet);phaseBloomWet.connect(effectsGain);phaseBloomFeedback=audioCtx.createGain();phaseBloomFeedback.gain.value=.08;phaseNode.connect(phaseBloomFeedback);phaseBloomFeedback.connect(phaseInput);dry.connect(phaseInput);
  dry.connect(masterGain);dry.connect(convolver);convolver.connect(wetGain);wetGain.connect(effectsGain);effectsGain.connect(masterGain);masterGain.connect(analyser);analyser.connect(audioCtx.destination);startScope();
  window.__juumAudio={dry,masterGain,convolver,wetGain,delayWet,chorusInput};$("audioStatus").textContent="Audio engine: ready";
 }
 function midiNoteOn(note,velocity=100){if(midiOutput&&state.sendNotes){const ch=+$("midiChannel").value-1;midiOutput.send([0x90|ch,note,velocity])}}
 function midiNoteOff(note){if(midiOutput&&state.sendNotes){const ch=+$("midiChannel").value-1;midiOutput.send([0x80|ch,note,0])}}
+function signaturePeriodicWave(type,character){
+ const harmonics=48,real=new Float32Array(harmonics+1),imag=new Float32Array(harmonics+1);character=Math.max(0,Math.min(1,character));
+ for(let n=1;n<=harmonics;n++){let base=0;
+  if(type==="sine")base=n===1?1:0;
+  else if(type==="triangle")base=(n%2?((n%4===1)?1:-1)*8/(Math.PI*Math.PI*n*n):0);
+  else if(type==="square")base=n%2?4/(Math.PI*n):0;
+  else base=2*((n%2)?1:-1)/(Math.PI*n);
+  const bright=2*((n%2)?1:-1)/(Math.PI*n);const edge=character*Math.pow(n/harmonics,.45)*.85;
+  imag[n]=base*(1-edge)+bright*edge;
+ }
+ return audioCtx.createPeriodicWave(real,imag,{disableNormalization:false});
+}
+function setSignatureWave(osc,type){if(state.waveCharacter>0.005){osc.setPeriodicWave(signaturePeriodicWave(type,state.waveCharacter))}else{osc.type=type}}
 function noteOn(midi,vel=0.85,duration=null){
  initAudio();if(!audioCtx)return;if(audioCtx.state==="suspended")audioCtx.resume();
  midi=Math.max(0,Math.min(127,Math.round(midi)));const key=midi+"-"+Math.random().toString(36).slice(2,7),freq=440*Math.pow(2,(midi-69+state.tune/100)/12),now=audioCtx.currentTime;
  const mainOsc=audioCtx.createOscillator(),mainFilter=audioCtx.createBiquadFilter(),mainAmp=audioCtx.createGain();
- mainOsc.type=$("mainWave").value;mainOsc.frequency.value=freq;mainFilter.type="lowpass";mainFilter.frequency.value=state.cutoff;mainFilter.Q.value=state.resonance;
+ setSignatureWave(mainOsc,$("mainWave").value);mainOsc.frequency.value=freq;mainFilter.type="lowpass";mainFilter.frequency.value=state.cutoff;mainFilter.Q.value=state.resonance;
  mainAmp.gain.setValueAtTime(.0001,now);mainAmp.gain.exponentialRampToValueAtTime(Math.max(.001,state.mainVol*vel),now+state.attack);mainAmp.gain.exponentialRampToValueAtTime(Math.max(.001,state.mainVol*vel*state.sustain),now+state.attack+state.decay);
  mainOsc.connect(mainFilter);mainFilter.connect(mainAmp);if(state.mainEnabled){mainAmp.connect(window.__juumAudio.dry);if(window.__juumAudio.chorusInput)mainAmp.connect(window.__juumAudio.chorusInput)}else mainAmp.gain.value=0;mainOsc.start(now);mainFilters.push(mainFilter);
  const subOsc=audioCtx.createOscillator(),subFilter=audioCtx.createBiquadFilter(),subAmp=audioCtx.createGain();
- subOsc.type=$("subWave").value;subOsc.frequency.value=freq/2;subOsc.detune.value=state.detune;subFilter.type="lowpass";subFilter.frequency.value=state.subCutoff;subFilter.Q.value=state.subRes;
+ setSignatureWave(subOsc,$("subWave").value);subOsc.frequency.value=freq/2;subOsc.detune.value=state.detune;subFilter.type="lowpass";subFilter.frequency.value=state.subCutoff;subFilter.Q.value=state.subRes;
  subAmp.gain.setValueAtTime(.0001,now);subAmp.gain.exponentialRampToValueAtTime(Math.max(.001,state.subVol*vel),now+state.subAttack);subAmp.gain.exponentialRampToValueAtTime(Math.max(.001,state.subVol*vel*state.subSustain),now+state.subAttack+state.subDecay);
  subOsc.connect(subFilter);subFilter.connect(subAmp);if(state.subEnabled){subAmp.connect(window.__juumAudio.dry);if(window.__juumAudio.chorusInput)subAmp.connect(window.__juumAudio.chorusInput)}else subAmp.gain.value=0;subOsc.start(now);subFilters.push(subFilter);
  activeVoices.set(key,{midi,osc:[mainOsc,subOsc],amp:[mainAmp,subAmp],filters:[mainFilter,subFilter],released:false});
@@ -285,10 +306,10 @@ $("panic").addEventListener("click",()=>{for(const [k] of activeVoices)noteOff(k
 $("bpm").addEventListener("change",e=>{e.target.value=Math.max(30,Math.min(300,+e.target.value||120))});
 $("scale").addEventListener("change",()=>{if(state.arp)refreshArpNotes()});$("root").addEventListener("change",()=>{if(state.arp)refreshArpNotes()});
 
-function presetData(){const knobs={};document.querySelectorAll(".knob").forEach(el=>knobs[el.dataset.target]=state[el.dataset.target]);const ids=["mainWave","subWave","scale","root","delayTime","bpm"];const selects={};ids.forEach(id=>{if($(id))selects[id]=$(id).value});return {knobs,selects,toggles:{mainEnabled:state.mainEnabled,subEnabled:state.subEnabled,reverbEnabled:state.reverbEnabled,delayEnabled:state.delayEnabled,chorusEnabled:state.chorusEnabled},seqEnabled:seqEnabled.slice(),seqNotes:seqNotes.slice(),arpMode:state.arpMode}}
+function presetData(){const knobs={};document.querySelectorAll(".knob").forEach(el=>knobs[el.dataset.target]=state[el.dataset.target]);const ids=["mainWave","subWave","scale","root","delayTime","bpm"];const selects={};ids.forEach(id=>{if($(id))selects[id]=$(id).value});return {knobs,selects,toggles:{mainEnabled:state.mainEnabled,subEnabled:state.subEnabled,reverbEnabled:state.reverbEnabled,delayEnabled:state.delayEnabled,chorusEnabled:state.chorusEnabled,phaseBloomEnabled:state.phaseBloomEnabled},seqEnabled:seqEnabled.slice(),seqNotes:seqNotes.slice(),arpMode:state.arpMode}}
 function presetsRead(){try{return JSON.parse(localStorage.getItem("juumPresets")||"{}")}catch(e){return {}}}
 function presetsRefresh(){const el=$("presetSelect"),old=el.value,p=presetsRead();el.innerHTML='<option value="">Choose a preset</option>';Object.keys(p).sort().forEach(n=>{const o=document.createElement("option");o.value=n;o.textContent=n;el.appendChild(o)});if(p[old])el.value=old}
-function presetApply(p){Object.entries(p.knobs||{}).forEach(([k,v])=>{const el=Array.from(document.querySelectorAll(".knob")).find(x=>x.dataset.target===k);if(el)setKnob(el,+v)});Object.entries(p.selects||{}).forEach(([id,v])=>{if($(id))$(id).value=v});Object.entries(p.toggles||{}).forEach(([id,on])=>{if($(id)){state[id]=!!on;$(id).classList.toggle("on",!!on);$(id).setAttribute("aria-pressed",String(!!on))}});if(audioCtx){if(wetGain)wetGain.gain.setTargetAtTime(state.reverbEnabled?state.reverb:0,audioCtx.currentTime,.03);if(delayWet)delayWet.gain.setTargetAtTime(state.delayEnabled?state.delay:0,audioCtx.currentTime,.03);if(chorusWet)chorusWet.gain.setTargetAtTime(state.chorusEnabled?state.chorus:0,audioCtx.currentTime,.03)}if(Array.isArray(p.seqEnabled)&&p.seqEnabled.length===16){seqEnabled=p.seqEnabled.slice()}if(Array.isArray(p.seqNotes)&&p.seqNotes.length===16){seqNotes=p.seqNotes.slice()}stepsRender();if(p.arpMode){state.arpMode=p.arpMode;document.querySelectorAll("#arpMode button").forEach(b=>b.classList.toggle("active",b.dataset.mode===state.arpMode))}}
+function presetApply(p){Object.entries(p.knobs||{}).forEach(([k,v])=>{const el=Array.from(document.querySelectorAll(".knob")).find(x=>x.dataset.target===k);if(el)setKnob(el,+v)});Object.entries(p.selects||{}).forEach(([id,v])=>{if($(id))$(id).value=v});Object.entries(p.toggles||{}).forEach(([id,on])=>{if($(id)){state[id]=!!on;$(id).classList.toggle("on",!!on);$(id).setAttribute("aria-pressed",String(!!on))}});if(audioCtx){if(wetGain)wetGain.gain.setTargetAtTime(state.reverbEnabled?state.reverb:0,audioCtx.currentTime,.03);if(delayWet)delayWet.gain.setTargetAtTime(state.delayEnabled?state.delay:0,audioCtx.currentTime,.03);if(chorusWet)chorusWet.gain.setTargetAtTime(state.chorusEnabled?state.chorus:0,audioCtx.currentTime,.03);if(phaseBloomWet)phaseBloomWet.gain.setTargetAtTime(state.phaseBloomEnabled?state.phaseBloom:0,audioCtx.currentTime,.03)}if(Array.isArray(p.seqEnabled)&&p.seqEnabled.length===16){seqEnabled=p.seqEnabled.slice()}if(Array.isArray(p.seqNotes)&&p.seqNotes.length===16){seqNotes=p.seqNotes.slice()}stepsRender();if(p.arpMode){state.arpMode=p.arpMode;document.querySelectorAll("#arpMode button").forEach(b=>b.classList.toggle("active",b.dataset.mode===state.arpMode))}}
 $("savePreset").addEventListener("click",()=>{const name=prompt("Name this JUUM preset:","My Sound");if(!name||!name.trim())return;try{const p=presetsRead();p[name.trim()]=presetData();localStorage.setItem("juumPresets",JSON.stringify(p));presetsRefresh();$("presetSelect").value=name.trim();$("presetStatus").textContent="Saved: "+name.trim()}catch(e){$("presetStatus").textContent="Could not save; browser storage may be disabled."}});
 $("loadPreset").addEventListener("click",()=>{const name=$("presetSelect").value,p=presetsRead();if(!name||!p[name]){$("presetStatus").textContent="Choose a preset first.";return}presetApply(p[name]);$("presetStatus").textContent="Loaded: "+name});
 $("deletePreset").addEventListener("click",()=>{const name=$("presetSelect").value;if(!name)return;const p=presetsRead();delete p[name];localStorage.setItem("juumPresets",JSON.stringify(p));presetsRefresh();$("presetStatus").textContent="Deleted: "+name});presetsRefresh();
@@ -311,6 +332,7 @@ setSwitch("mainEnabled","mainEnabled");setSwitch("subEnabled","subEnabled");
 setSwitch("reverbEnabled","reverbEnabled",on=>{if(wetGain&&audioCtx)wetGain.gain.setTargetAtTime(on?state.reverb:0,audioCtx.currentTime,.03)});
 setSwitch("delayEnabled","delayEnabled",on=>{if(delayWet&&audioCtx)delayWet.gain.setTargetAtTime(on?state.delay:0,audioCtx.currentTime,.03)});
 setSwitch("chorusEnabled","chorusEnabled",on=>{if(chorusWet&&audioCtx)chorusWet.gain.setTargetAtTime(on?state.chorus:0,audioCtx.currentTime,.03)});
+setSwitch("phaseBloomEnabled","phaseBloomEnabled",on=>{if(phaseBloomWet&&audioCtx)phaseBloomWet.gain.setTargetAtTime(on?state.phaseBloom:0,audioCtx.currentTime,.03)});
 $("testTone").addEventListener("click",()=>{initAudio();if(audioCtx&&audioCtx.state==="suspended")audioCtx.resume();const key=noteOn(69,.8);$("quickStatus").textContent="TEST TONE · A4";setTimeout(()=>{if(key)noteOff(key);$("quickStatus").textContent="READY · tap the strumplate to play"},850)});
 $("makeNoise").addEventListener("click",()=>{initAudio();if(!audioCtx)return;const n=audioCtx.createBufferSource(),b=audioCtx.createBuffer(1,audioCtx.sampleRate*.65,audioCtx.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*(1-i/d.length);const g=audioCtx.createGain();g.gain.value=.25;n.buffer=b;n.connect(g);g.connect(masterGain);n.start();$("quickStatus").textContent="NOISE BURST";setTimeout(()=>$("quickStatus").textContent="READY · tap the strumplate to play",700)});
 document.addEventListener("keydown",e=>{if(e.code==="Space"&&!/INPUT|SELECT|BUTTON/.test(e.target.tagName)){e.preventDefault();state.playing?stopClock():startClock()}});
