@@ -58,6 +58,7 @@ button,input,select{font:inherit}button{color:var(--text);background:linear-grad
           <div class="knob-wrap"><div class="knob" data-target="reverb" data-min="0" data-max="1" data-value=".18"></div><div class="knob-label">Reverb</div><div class="knob-value" id="reverbVal">18%</div></div>
           <div class="knob-wrap"><div class="knob" data-target="delay" data-min="0" data-max=".75" data-value=".12"></div><div class="knob-label">Delay</div><div class="knob-value" id="delayVal">12%</div></div>
           <div class="knob-wrap"><div class="knob" data-target="chorus" data-min="0" data-max="1" data-value=".12"></div><div class="knob-label">Chorus</div><div class="knob-value" id="chorusVal">12%</div></div>
+          <div class="knob-wrap"><div class="knob" data-target="effectsVol" data-min="0" data-max="1" data-value=".7"></div><div class="knob-label">FX Volume</div><div class="knob-value" id="effectsVolVal">70%</div></div>
         </div>
         <div class="effect-switches"><div class="toggle"><span>Reverb</span><button class="switch on" id="reverbEnabled" aria-label="Enable reverb" aria-pressed="true"></button></div><div class="toggle"><span>Delay</span><button class="switch on" id="delayEnabled" aria-label="Enable delay" aria-pressed="true"></button></div><div class="toggle"><span>Chorus</span><button class="switch on" id="chorusEnabled" aria-label="Enable chorus" aria-pressed="true"></button></div></div><div class="range-row"><label for="delayTime">Delay time</label><input id="delayTime" type="range" min=".05" max="1" step=".01" value=".25"><output id="delayTimeVal">0.25 s</output></div>
       </section>
@@ -114,7 +115,7 @@ const state = {
  mainVol:.65, subVol:.28, cutoff:4200, resonance:2, attack:.02, decay:.22, sustain:.65, release:.4,
  subCutoff:1600, subRes:1, subAttack:.03, subDecay:.3, subSustain:.5, subRelease:.5, detune:0,
  mainEnabled:true,subEnabled:true,reverbEnabled:true,delayEnabled:true,chorusEnabled:true,
- reverb:.18, delay:.12, chorus:.12, arpRate:8, arpOct:2, swing:.08, gate:.65, master:.7, tune:0,
+ reverb:.18, delay:.12, chorus:.12, effectsVol:.7, arpRate:8, arpOct:2, swing:.08, gate:.65, master:.7, tune:0,
  arp:false, arpMode:"up", playing:false, sendClock:true, midiThru:false, receiveClock:false, sendNotes:true
 };
 const fmt = (k,v) => {
@@ -126,7 +127,7 @@ const fmt = (k,v) => {
  if(k==="resonance"||k==="subRes") return Number(v).toFixed(1);
  return Number(v).toFixed(2)+" s";
 };
-let audioCtx=null,masterGain=null,wetGain=null,delayWet=null,delayNode=null,mainFilters=[],subFilters=[],activeVoices=new Map(),midiAccess=null,midiOutput=null,clockTimer=null,clockTick=0,clockOrigin=0,lastClockTap=0,analyser=null,scopeFrame=0,seqTimer=null,seqStep=0,seqEnabled=Array(16).fill(false);
+let audioCtx=null,masterGain=null,effectsGain=null,wetGain=null,delayWet=null,delayNode=null,mainFilters=[],subFilters=[],activeVoices=new Map(),midiAccess=null,midiOutput=null,clockTimer=null,clockTick=0,clockOrigin=0,lastClockTap=0,analyser=null,scopeFrame=0,seqTimer=null,seqStep=0,seqEnabled=Array(16).fill(false);
 function setKnob(el,val){
  const k=el.dataset.target,min=+el.dataset.min,max=+el.dataset.max;
  val=Math.max(min,Math.min(max,val));state[k]=val;
@@ -135,6 +136,7 @@ function setKnob(el,val){
  const out=$(k+"Val");if(out)out.textContent=fmt(k,val);
  if(audioCtx){
    if(k==="master") masterGain.gain.setTargetAtTime(val,audioCtx.currentTime,.02);
+   if(k==="effectsVol"&&effectsGain)effectsGain.gain.setTargetAtTime(val,audioCtx.currentTime,.02);
    if(k==="cutoff"&&mainFilters.length)mainFilters.forEach(f=>f.frequency.setTargetAtTime(val,audioCtx.currentTime,.02));
    if(k==="subCutoff"&&subFilters.length)subFilters.forEach(f=>f.frequency.setTargetAtTime(val,audioCtx.currentTime,.02));
    if(k==="detune")activeVoices.forEach(v=>{if(v.osc[1])v.osc[1].detune.setTargetAtTime(val,audioCtx.currentTime,.02)});
@@ -165,13 +167,13 @@ function initAudio(){
  if(audioCtx)return;
  const AC=window.AudioContext||window.webkitAudioContext;if(!AC){$("audioStatus").textContent="Audio unavailable in this browser";return}
  audioCtx=new AC();masterGain=audioCtx.createGain();masterGain.gain.value=state.master;
- const dry=audioCtx.createGain();dry.gain.value=1;analyser=audioCtx.createAnalyser();analyser.fftSize=2048;analyser.smoothingTimeConstant=.82;
+ const dry=audioCtx.createGain();dry.gain.value=1;effectsGain=audioCtx.createGain();effectsGain.gain.value=state.effectsVol;analyser=audioCtx.createAnalyser();analyser.fftSize=2048;analyser.smoothingTimeConstant=.82;
  const convolver=audioCtx.createConvolver();const impulse=audioCtx.createBuffer(2,audioCtx.sampleRate*1.5,audioCtx.sampleRate);
  for(let c=0;c<2;c++){let d=impulse.getChannelData(c);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,2.6)}
  convolver.buffer=impulse;wetGain=audioCtx.createGain();wetGain.gain.value=state.reverb;
  const delayIn=audioCtx.createGain();delayNode=audioCtx.createDelay(2);delayNode.delayTime.value=+$("delayTime").value;delayWet=audioCtx.createGain();delayWet.gain.value=state.delay;const feedback=audioCtx.createGain();feedback.gain.value=.22;
- delayIn.connect(delayNode);delayNode.connect(feedback);feedback.connect(delayNode);delayNode.connect(delayWet);delayWet.connect(masterGain);
- dry.connect(masterGain);dry.connect(convolver);convolver.connect(wetGain);wetGain.connect(masterGain);masterGain.connect(analyser);analyser.connect(audioCtx.destination);startScope();
+ delayIn.connect(delayNode);delayNode.connect(feedback);feedback.connect(delayNode);delayNode.connect(delayWet);delayWet.connect(effectsGain);
+ dry.connect(masterGain);dry.connect(convolver);convolver.connect(wetGain);wetGain.connect(effectsGain);effectsGain.connect(masterGain);masterGain.connect(analyser);analyser.connect(audioCtx.destination);startScope();
  window.__juumAudio={dry,masterGain,convolver,wetGain,delayWet};$("audioStatus").textContent="Audio engine: ready";
 }
 function midiNoteOn(note,velocity=100){if(midiOutput&&state.sendNotes){const ch=+$("midiChannel").value-1;midiOutput.send([0x90|ch,note,velocity])}}
