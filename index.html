@@ -46,6 +46,16 @@ button,input,select{font:inherit}button{color:var(--text);background:linear-grad
       </div>
     </section>
   </header>
+  <section class="panel" id="hardwarePanel" style="border-color:#17b8d8">
+    <h2 class="section-title">JUUM Hardware Link</h2>
+    <div class="row" style="align-items:center">
+      <button id="hardwareConnect" class="control">⚡ CONNECT ESP32-S3</button>
+      <button id="hardwareDisconnect" class="control" disabled>DISCONNECT</button>
+      <span class="small-label"><span class="led" id="hardwareLed"></span><span id="hardwareStatus">USB serial not connected</span></span>
+    </div>
+    <div class="studio-status">Connect the JUUM controller over USB. In Chrome, allow access to the ESP32 serial port when prompted.</div>
+  </section>
+
   <main class="middle">
     <section class="panel">
       <h2 class="section-title">Chord Select <span style="font-size:10px;color:var(--muted);font-weight:400">· PAIR CHORD BUTTONS</span></h2>
@@ -337,6 +347,106 @@ $("testTone").addEventListener("click",()=>{initAudio();if(audioCtx&&audioCtx.st
 $("makeNoise").addEventListener("click",()=>{initAudio();if(!audioCtx)return;const n=audioCtx.createBufferSource(),b=audioCtx.createBuffer(1,audioCtx.sampleRate*.65,audioCtx.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*(1-i/d.length);const g=audioCtx.createGain();g.gain.value=.25;n.buffer=b;n.connect(g);g.connect(masterGain);n.start();$("quickStatus").textContent="NOISE BURST";setTimeout(()=>$("quickStatus").textContent="READY · tap the strumplate to play",700)});
 document.addEventListener("keydown",e=>{if(e.code==="Space"&&!/INPUT|SELECT|BUTTON/.test(e.target.tagName)){e.preventDefault();state.playing?stopClock():startClock()}});
 })();
+
+/* JUUM ESP32-S3 hardware bridge: newline-delimited JSON over Web Serial. */
+let juumSerialPort=null,juumSerialReader=null,juumSerialWriter=null,juumSerialKeepReading=false;
+const hardwareStatus=(msg,connected=false)=>{
+ const s=$("hardwareStatus"),led=$("hardwareLed");
+ if(s)s.textContent=msg;
+ if(led)led.classList.toggle("on",connected);
+ if($("hardwareConnect"))$("hardwareConnect").disabled=connected;
+ if($("hardwareDisconnect"))$("hardwareDisconnect").disabled=!connected;
+};
+async function connectJuumHardware(){
+ if(!("serial" in navigator)){hardwareStatus("Web Serial unavailable · use current Chrome or Edge");return}
+ try{
+  juumSerialPort=await navigator.serial.requestPort();
+  await juumSerialPort.open({baudRate:115200});
+  const encoder=new TextEncoderStream();
+  encoder.readable.pipeTo(juumSerialPort.writable).catch(()=>{});
+  juumSerialWriter=encoder.writable.getWriter();
+  juumSerialKeepReading=true;
+  hardwareStatus("Connected · JUUM controller",true);
+  readJuumHardware();
+ }catch(e){hardwareStatus("Connect failed · "+(e.message||e));}
+}
+async function readJuumHardware(){
+ const decoder=new TextDecoderStream();
+ juumSerialPort.readable.pipeTo(decoder.writable).catch(()=>{});
+ juumSerialReader=decoder.readable.getReader();
+ let buffer="";
+ try{
+  while(juumSerialKeepReading){
+   const {value,done}=await juumSerialReader.read();if(done)break;
+   buffer+=value;
+   let cut;
+   while((cut=buffer.indexOf("\n"))>=0){
+    const line=buffer.slice(0,cut).trim();buffer=buffer.slice(cut+1);
+    if(line){try{handleJuumHardwareMessage(JSON.parse(line))}catch(e){console.warn("JUUM hardware message ignored",line,e)}}
+   }
+  }
+ }catch(e){if(juumSerialKeepReading)hardwareStatus("Serial read error · "+e.message)}
+}
+async function sendJuumHardwareMessage(obj){
+ if(!juumSerialWriter)return;
+ try{await juumSerialWriter.write(JSON.stringify(obj)+"\n")}catch(e){console.warn("JUUM hardware write failed",e)}
+}
+const hardwareKnobMap=["mainVol","waveCharacter","cutoff","resonance","subVol","reverb","delay","phaseBloom"];
+function changeHardwareKnob(index,normalized){
+ const target=hardwareKnobMap[index];if(!target)return;
+ const el=Array.from(document.querySelectorAll(".knob")).find(k=>k.dataset.target===target);if(!el)return;
+ const n=Math.max(0,Math.min(1,Number(normalized)||0));
+ setKnob(el,+el.dataset.min+n*(+el.dataset.max-+el.dataset.min));
+}
+function cycleHardwareChord(delta){
+ const chords=Array.from(document.querySelectorAll(".chord"));if(!chords.length)return;
+ const active=chords.findIndex(b=>b.classList.contains("selected"));
+ const next=(Math.max(0,active)+delta+chords.length)%chords.length;
+ chords[next].click();
+}
+function cycleHardwarePreset(delta){
+ const select=$("presetSelect");if(!select||select.options.length<2)return;
+ select.selectedIndex=Math.max(1,Math.min(select.options.length-1,select.selectedIndex+delta));
+}
+function handleJuumHardwareMessage(m){
+ if(!m||typeof m.type!=="string")return;
+ if(m.type==="hello"){hardwareStatus("Connected · "+(m.name||"JUUM controller"),true);return}
+ if(m.type==="pot"){changeHardwareKnob(Number(m.id),Number(m.value)/4095);return}
+ if(m.type==="step"){
+  const b=$("steps")?.children?.[Number(m.id)];if(b)b.click();return;
+ }
+ if(m.type==="button"){
+  const actions=[()=> $("seqPlay")?.click(),()=> $("seqStop")?.click(),()=> $("randomizeNotes")?.click(),()=> $("panic")?.click()];
+  if(actions[Number(m.id)])actions[Number(m.id)]();return;
+ }
+ if(m.type==="encoder"){
+  const id=Number(m.id),delta=Math.sign(Number(m.delta)||0);
+  if(!delta)return;
+  if(id===0)cycleHardwareChord(delta);
+  else if(id===1){const bpm=$("seqBpm");if(bpm)bpm.value=Math.max(30,Math.min(300,(+bpm.value||120)+delta));}
+  else if(id===2)cycleHardwarePreset(delta);
+  else if(id===3){const el=Array.from(document.querySelectorAll(".knob")).find(k=>k.dataset.target==="master");if(el)setKnob(el,state.master+delta*.02);}
+  return;
+ }
+ if(m.type==="encoderPress"){
+  const actions=[()=> $("sequenceMode")?.click(),()=> $("loadPreset")?.click(),()=> $("arpToggle")?.click(),()=> $("panic")?.click()];
+  if(actions[Number(m.id)])actions[Number(m.id)]();return;
+ }
+}
+async function disconnectJuumHardware(){
+ juumSerialKeepReading=false;
+ try{if(juumSerialReader){await juumSerialReader.cancel();juumSerialReader.releaseLock()}}catch(e){}
+ try{if(juumSerialWriter){await juumSerialWriter.close()}}catch(e){}
+ try{if(juumSerialPort)await juumSerialPort.close()}catch(e){}
+ juumSerialPort=null;juumSerialReader=null;juumSerialWriter=null;
+ hardwareStatus("USB serial disconnected",false);
+}
+$("hardwareConnect")?.addEventListener("click",connectJuumHardware);
+$("hardwareDisconnect")?.addEventListener("click",disconnectJuumHardware);
+if("serial" in navigator){
+ navigator.serial.addEventListener("disconnect",e=>{if(juumSerialPort&&e.target===juumSerialPort)disconnectJuumHardware()});
+}
+
 </script>
 </body>
 </html>
